@@ -17,7 +17,9 @@ $user = $_SESSION['user'];
   <div class="container mt-4">
     <h2>Welcome, <?= $user['role'] ?> (<?= $user['username'] ?>)!</h2>
     <p>This is your dashboard.</p>
-    <a href="logout.php" class="btn btn-danger">Logout</a>
+    <a href="logout.php" class="btn btn-danger ml-2">
+  <i class="fas fa-sign-out-alt"></i> Logout
+</a>
   </div>
 
 </body>

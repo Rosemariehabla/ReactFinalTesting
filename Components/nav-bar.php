@@ -15,10 +15,12 @@
   <div class="mx-auto">
     <h5 class="text-white mb-0">Welcome, Admin!</h5>
   </div>
-  <!-- Logout -->
-  <ul class="navbar-nav px-3">
-    <li class="nav-item text-nowrap">
-      <a class="nav-link" href="logout.php">Logout</a>
-    </li> 
-  </ul>
+<!-- Logout -->
+<ul class="navbar-nav px-3">
+  <li class="nav-item text-nowrap">
+   <a href="dashboard.php?logout=1" class="btn btn-danger ml-2">
+    <i class="fas fa-sign-out-alt"></i> Logout
+   </a>
+  </li>
+</ul>
 </nav>

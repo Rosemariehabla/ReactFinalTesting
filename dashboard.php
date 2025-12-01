@@ -36,7 +36,6 @@ if (isset($_POST['filter_date']) && !empty($_POST['filter_date'])) {
     $visitors = getVisitorsByDate($date);
     $_SESSION['message'] = "Filtered visitors for $date";
 }
-
 ?>
 <!doctype html>
 <html lang="en">
@@ -84,7 +83,7 @@ if (isset($_POST['filter_date']) && !empty($_POST['filter_date'])) {
           </div>
 
           <!-- Add + Filter Section -->
-           <div class="d-flex justify-content-between mb-3 mt-4">
+          <div class="d-flex justify-content-between mb-3 mt-4">
             <a href="visitor-form.php" class="btn btn-primary">
               <i class="fas fa-user-plus"></i> Add New Visitor
             </a>
@@ -95,36 +94,46 @@ if (isset($_POST['filter_date']) && !empty($_POST['filter_date'])) {
                 <i class="fas fa-filter"></i> Filter
               </button>
             </form>
-              </div>
+          </div>
+
           <!-- Visitor Table -->
           <div class="mt-4">
             <h3>All Visitors</h3>
-            <table class="table table-bordered">
-              <thead class="thead-light">
+            <table class="table table-bordered table-striped">
+              <thead class="thead-dark">
                 <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Date of Visit</th>
-                  <th>Purpose</th>
+                  <th>Date</th>
+                  <th>Visitor Name</th>
+                  <th>Contact #</th>
+                  <th>Address</th>
+                  <th>School/Office Name</th>
+                  <th>Purpose of Visit</th>
                   <th class="text-center">Action</th>
                 </tr>
               </thead>
               <tbody>
                 <?php foreach ($visitors as $v): ?>
                   <tr>
-                    <td><?= $v['id'] ?></td>
+                    <!-- Date formatted -->
+                    <td><?= strtoupper(date('d M Y', strtotime($v['date_of_visit']))) ?></td>
+                    <!-- Name -->
                     <td><?= $v['name'] ?></td>
-                    <td><?= $v['date_of_visit'] ?></td>
+                    <!-- Contact # -->
+                    <td><?= $v['contact_number'] ?></td>
+                    <!-- Address -->
+                    <td><?= $v['address'] ?></td>
+                    <!-- School/Office -->
+                    <td><?= $v['school_office'] ?></td>
+                    <!-- Purpose -->
                     <td><?= $v['purpose'] ?></td>
+                    <!-- Action -->
                     <td class="text-center">
-                      <!-- Edit Button -->
                       <a href="visitor-form.php?id=<?= $v['id'] ?>" class="btn btn-sm btn-warning mr-1">
                         <i class="fas fa-pen"></i>
                       </a>
-                      <!-- Delete Button -->
                       <a href="dashboard.php?delete_id=<?= $v['id'] ?>" 
-                        class="btn btn-sm btn-danger"
-                        onclick="return confirm('Delete this visitor?')">
+                         class="btn btn-sm btn-danger"
+                         onclick="return confirm('Delete this visitor?')">
                         <i class="fas fa-trash"></i>
                       </a>
                     </td>
