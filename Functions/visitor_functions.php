@@ -1,81 +1,92 @@
 <?php
-include 'connectdb.php';
+include 'Functions/connectdb.php';
 
-// bilang ng visitors ngayong araw
-function countToday(){
+// ✅ Get all visitors
+function getAllVisitors() {
     $conn = Connect();
-    $today = date('Y-m-d'); // kunin ang current date gamit PHP
-    $query = "SELECT COUNT(*) as total FROM visitors WHERE date_of_visit = '$today'";
-    $result = $conn->query($query);
-    $data = $result->fetch_assoc();
-    $conn->close();
-    return $data['total'];
-}
-
-// bilang ng visitors ayon sa purpose (Exam, Visit, Inquiry)
-function countByCategory($purpose){
-    $conn = Connect();
-    $query = "SELECT COUNT(*) as total FROM visitors WHERE purpose='$purpose'";
-    $result = $conn->query($query);
-    $data = $result->fetch_assoc();
-    $conn->close();
-    return $data['total'];
-}
-
-// kunin lahat ng visitors
-function getAllVisitors(){
-    $conn = Connect();
-    $query = "SELECT * FROM visitors ORDER BY date_of_visit DESC";
-    $result = $conn->query($query);
-    $data = [];
-    while($row = $result->fetch_assoc()){
-        $data[] = $row;
+    $sql = "SELECT * FROM visitors ORDER BY date_of_visit DESC";
+    $result = $conn->query($sql);
+    $visitors = [];
+    while ($row = $result->fetch_assoc()) {
+        $visitors[] = $row;
     }
-    $conn->close();
-    return $data;
+    return $visitors;
 }
 
-// magdagdag ng bagong visitor
-function addVisitor($name, $date, $contact, $address, $school, $purpose){
+// ✅ Get visitors by specific date
+function getVisitorsByDate($date) {
     $conn = Connect();
-    $query = "INSERT INTO visitors (name, date_of_visit, contact_number, address, school_office, purpose)
-              VALUES ('$name','$date','$contact','$address','$school','$purpose')";
-    $result = $conn->query($query);
-    $conn->close();
-    return $result;
-}
-
-// i-update ang existing visitor
-function updateVisitor($id, $name, $date, $contact, $address, $school, $purpose){
-    $conn = Connect();
-    $query = "UPDATE visitors 
-              SET name='$name', date_of_visit='$date', contact_number='$contact',
-                  address='$address', school_office='$school', purpose='$purpose'
-              WHERE id='$id'";
-    $result = $conn->query($query);
-    $conn->close();
-    return $result;
-}
-
-// burahin ang visitor
-function deleteVisitor($id){
-    $conn = Connect();
-    $query = "DELETE FROM visitors WHERE id='$id'";
-    $result = $conn->query($query);
-    $conn->close();
-    return $result;
-}
-
-// 🔎 bagong function: kunin visitors ayon sa date
-function getVisitorsByDate($date){
-    $conn = Connect();
-    $query = "SELECT * FROM visitors WHERE date_of_visit = '$date' ORDER BY name ASC";
-    $result = $conn->query($query);
-    $data = [];
-    while($row = $result->fetch_assoc()){
-        $data[] = $row;
+    $stmt = $conn->prepare("SELECT * FROM visitors WHERE DATE(date_of_visit) = ? ORDER BY date_of_visit DESC");
+    $stmt->bind_param("s", $date);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $visitors = [];
+    while ($row = $result->fetch_assoc()) {
+        $visitors[] = $row;
     }
-    $conn->close();
-    return $data;
+    return $visitors;
+}
+
+// ✅ Count visitors today OR by filter date
+function countToday($date = null) {
+    $conn = Connect();
+    if ($date) {
+        $stmt = $conn->prepare("SELECT COUNT(*) as total FROM visitors WHERE DATE(date_of_visit) = ?");
+        $stmt->bind_param("s", $date);
+    } else {
+        $stmt = $conn->prepare("SELECT COUNT(*) as total FROM visitors WHERE DATE(date_of_visit) = CURDATE()");
+    }
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc()['total'];
+}
+
+// ✅ Count visitors by category (Exam, Visit, Inquiry) with optional filter date
+function countByCategory($category, $date = null) {
+    $conn = Connect();
+    if ($date) {
+        $stmt = $conn->prepare("SELECT COUNT(*) as total FROM visitors WHERE purpose = ? AND DATE(date_of_visit) = ?");
+        $stmt->bind_param("ss", $category, $date);
+    } else {
+        $stmt = $conn->prepare("SELECT COUNT(*) as total FROM visitors WHERE purpose = ? AND DATE(date_of_visit) = CURDATE()");
+        $stmt->bind_param("s", $category);
+    }
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc()['total'];
+}
+
+// ✅ Delete visitor
+function deleteVisitor($id) {
+    $conn = Connect();
+    $stmt = $conn->prepare("DELETE FROM visitors WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    return $stmt->execute();
+}
+
+// ✅ Add new visitor
+function addVisitor($name, $contact, $address, $school_office, $purpose, $date_of_visit) {
+    $conn = Connect();
+    $stmt = $conn->prepare("INSERT INTO visitors (name, contact_number, address, school_office, purpose, date_of_visit) 
+                            VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssss", $name, $contact, $address, $school_office, $purpose, $date_of_visit);
+    return $stmt->execute();
+}
+
+// ✅ Update visitor
+function updateVisitor($id, $name, $contact, $address, $school_office, $purpose, $date_of_visit) {
+    $conn = Connect();
+    $stmt = $conn->prepare("UPDATE visitors 
+                            SET name=?, contact_number=?, address=?, school_office=?, purpose=?, date_of_visit=? 
+                            WHERE id=?");
+    $stmt->bind_param("ssssssi", $name, $contact, $address, $school_office, $purpose, $date_of_visit, $id);
+    return $stmt->execute();
+}
+
+// ✅ Get single visitor by ID (for edit form)
+function getVisitorById($id) {
+    $conn = Connect();
+    $stmt = $conn->prepare("SELECT * FROM visitors WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
 }
 ?>

@@ -3,22 +3,32 @@ include 'Functions/visitor_functions.php';
 $title = 'Dashboard';
 session_start();
 
-// protect dashboard: redirect kung walang login
+// ✅ Protect dashboard: redirect kung walang login
 if (!isset($_SESSION['user'])) {
     header("Location: login.php");
     exit;
 }
 
-// counts
-$todayCount   = countToday();
-$examCount    = countByCategory('Exam');
-$visitCount   = countByCategory('Visit');
-$inquiryCount = countByCategory('Inquiry');
+// ✅ Handle filter input
+$filter_date = $_POST['filter_date'] ?? null;
 
-// default visitors
-$visitors = getAllVisitors();
+// ✅ Counts (update base sa filter date kung meron)
+if ($filter_date) {
+    $todayCount   = countToday($filter_date);
+    $examCount    = countByCategory('Exam', $filter_date);
+    $visitCount   = countByCategory('Visit', $filter_date);
+    $inquiryCount = countByCategory('Inquiry', $filter_date);
+    $visitors     = getVisitorsByDate($filter_date);
+    $_SESSION['message'] = "Filtered visitors for $filter_date";
+} else {
+    $todayCount   = countToday();
+    $examCount    = countByCategory('Exam');
+    $visitCount   = countByCategory('Visit');
+    $inquiryCount = countByCategory('Inquiry');
+    $visitors     = getAllVisitors();
+}
 
-// kung may delete request sa URL
+// ✅ Delete visitor
 if (isset($_GET['delete_id'])) {
     $id = $_GET['delete_id'];
     if (deleteVisitor($id)) {
@@ -28,13 +38,6 @@ if (isset($_GET['delete_id'])) {
     }
     header("Location: dashboard.php");
     exit;
-}
-
-// filter by date
-if (isset($_POST['filter_date']) && !empty($_POST['filter_date'])) {
-    $date = $_POST['filter_date'];
-    $visitors = getVisitorsByDate($date);
-    $_SESSION['message'] = "Filtered visitors for $date";
 }
 ?>
 <!doctype html>
@@ -54,18 +57,18 @@ if (isset($_POST['filter_date']) && !empty($_POST['filter_date'])) {
             <h1 class="h2">Dashboard</h1>        
           </div>
 
-          <!-- Success Message -->
+          <!-- ✅ Success Message -->
           <?php if (isset($_SESSION['message'])): ?>
-            <div class="alert alert-success">
+            <div class="alert alert-info">
               <?= $_SESSION['message']; ?>
             </div>
             <?php unset($_SESSION['message']); ?>
           <?php endif; ?>
 
-          <!-- Stats -->
+          <!-- ✅ Stats -->
           <div class="row text-center mb-4">
             <div class="col-3 bg-light p-3 border">
-              <h6>Visitors Today</h6>
+              <h6>Visitors</h6>
               <h2><?= $todayCount ?></h2>
             </div>
             <div class="col-3 bg-light p-3 border">
@@ -82,21 +85,21 @@ if (isset($_POST['filter_date']) && !empty($_POST['filter_date'])) {
             </div>
           </div>
 
-          <!-- Add + Filter Section -->
+          <!-- ✅ Add + Filter Section -->
           <div class="d-flex justify-content-between mb-3 mt-4">
             <a href="visitor-form.php" class="btn btn-primary">
               <i class="fas fa-user-plus"></i> Add New Visitor
             </a>
             <form class="form-inline" method="post">
               <label for="filter_date" class="mr-2">Filter by Date:</label>
-              <input type="date" name="filter_date" id="filter_date" class="form-control mr-2">
+              <input type="date" name="filter_date" id="filter_date" class="form-control mr-2" value="<?=$filter_date?>">
               <button type="submit" class="btn btn-secondary">
                 <i class="fas fa-filter"></i> Filter
               </button>
             </form>
           </div>
 
-          <!-- Visitor Table -->
+          <!-- ✅ Visitor Table -->
           <div class="mt-4">
             <h3>All Visitors</h3>
             <table class="table table-bordered table-striped">
@@ -114,19 +117,12 @@ if (isset($_POST['filter_date']) && !empty($_POST['filter_date'])) {
               <tbody>
                 <?php foreach ($visitors as $v): ?>
                   <tr>
-                    <!-- Date formatted -->
                     <td><?= strtoupper(date('d M Y', strtotime($v['date_of_visit']))) ?></td>
-                    <!-- Name -->
                     <td><?= $v['name'] ?></td>
-                    <!-- Contact # -->
                     <td><?= $v['contact_number'] ?></td>
-                    <!-- Address -->
                     <td><?= $v['address'] ?></td>
-                    <!-- School/Office -->
                     <td><?= $v['school_office'] ?></td>
-                    <!-- Purpose -->
                     <td><?= $v['purpose'] ?></td>
-                    <!-- Action -->
                     <td class="text-center">
                       <a href="visitor-form.php?id=<?= $v['id'] ?>" class="btn btn-sm btn-warning mr-1">
                         <i class="fas fa-pen"></i>
@@ -146,7 +142,7 @@ if (isset($_POST['filter_date']) && !empty($_POST['filter_date'])) {
       </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- ✅ Scripts -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.min.js"></script>
     <script src="js/dashboard.js"></script>
